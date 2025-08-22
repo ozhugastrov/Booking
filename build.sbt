@@ -28,5 +28,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % CirceVersion,
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "com.github.fd4s" %% "fs2-kafka" % "3.9.0"
+  "com.github.fd4s" %% "fs2-kafka" % "3.9.0",
+  "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+  "org.testcontainers" % "postgresql" % "1.21.3" % Test,
+  "io.github.embeddedkafka" %% "embedded-kafka" % "4.0.1.1" % Test
 )

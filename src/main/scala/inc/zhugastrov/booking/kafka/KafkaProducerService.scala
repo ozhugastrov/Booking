@@ -4,11 +4,11 @@ import cats.effect.IO
 import fs2.kafka.{KafkaProducer, ProducerRecord, ProducerRecords, ProducerResult, ProducerSettings}
 
 
-class KafkaProducerService {
+class KafkaProducerService(server: String) {
 
   private val producerSettings: ProducerSettings[IO, Long, String] =
     ProducerSettings[IO, Long, String]
-      .withBootstrapServers("localhost:9092")
+      .withBootstrapServers(server)
 
   def produce(key: Long, value: String): IO[ProducerResult[Long, String]] = {
     KafkaProducer.resource(producerSettings).use { producer =>

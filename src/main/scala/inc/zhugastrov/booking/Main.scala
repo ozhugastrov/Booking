@@ -15,7 +15,7 @@ object Main extends IOApp {
       db <- BookingDAO.create(Dependencies.xa)
       consumer <- IO.apply(KafkaConsumerService(db))
       consumer <- consumer.startConsuming()
-      producer <- IO.apply(KafkaProducerService())
+      producer <- IO.apply(KafkaProducerService("localhost:9092"))
       service <- IO.apply(BookingService(db, producer))
       server <- IO.apply(Server.createServer[IO](bookingRoutes(service)))
     } yield server
