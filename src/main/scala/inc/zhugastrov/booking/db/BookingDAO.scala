@@ -37,8 +37,6 @@ class BookingDAO private {
     sql"""CREATE SEQUENCE IF NOT EXISTS batch_id_seq
          """
 
-  private def asdf() = ""
-  
   private val createSequenceProgram = createSequenceSql.update.run
 
   def getAllReservationsForPropertyId(propertyId: Int): IO[List[Booking]] = {
@@ -60,24 +58,6 @@ class BookingDAO private {
       }
       .transact(xa)
   }
-
-  def run: IO[Unit] = for {
-    _ <- createTableProgram.transact(xa).void
-    _ <- createSequenceProgram.transact(xa).void
-    _ <- IO.println("Creating sample bookings…")
-    batchId <- getBatchId
-    bookings = List(
-      BookingRow(batchId, 123, LocalDate.parse("2025-05-11")),
-      BookingRow(batchId, 123, LocalDate.parse("2025-05-12")),
-      BookingRow(batchId, 123, LocalDate.parse("2025-05-13"))
-    )
-    // Choose one of these:
-    insertedCount <- storeBooking(bookings)
-    // rows <- storeBookingsReturning(bookings)
-    _ <- IO.println(s"Inserted rows: $insertedCount")
-    fetched <- getAllReservationsForPropertyId(123)
-    _ <- IO.println(s"Fetched back: $fetched")
-  } yield ()
 
 }
 

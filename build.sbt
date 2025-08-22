@@ -14,6 +14,7 @@ val mongo4cats = "0.7.13"
 val CirisVersion = "3.10.0"
 val CirceVersion = "0.14.14"
 val doobieVersion = "1.0.0-RC10"
+val fsKafkaVersion = "3.9.0"
 
 
 libraryDependencies ++= Seq(
@@ -27,4 +28,5 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % CirceVersion,
   "org.tpolecat" %% "doobie-core"     % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+  "com.github.fd4s" %% "fs2-kafka" % "3.9.0"
 )
