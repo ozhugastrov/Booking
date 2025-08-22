@@ -1,18 +1,26 @@
 package inc.zhugastrov.booking.kafka
 
 import cats.effect.*
+import io.circe.generic.auto.*
+import io.circe.parser.decode
 import fs2.*
 import fs2.kafka.*
+import inc.zhugastrov.booking.db.BookingDAO
+import inc.zhugastrov.booking.domain.DoubleBookingResponse
 
-class KafkaConsumerService {
+class KafkaConsumerService(db: BookingDAO) {
 
-  private def processRecord(record: ConsumerRecord[Long, String]) = IO.println("Consumed " + record.key)
+  private def processRecord(record: ConsumerRecord[Long, String]) = {
+    decode[DoubleBookingResponse](record.value).fold(
+      err =>  IO.println("Unknown event received " + record.value),
+      event => db.storeBookingConflict(event) *> IO.println("Stored to db"))
+  }
 
   private def consumerSettings: ConsumerSettings[IO, Long, String] =
     ConsumerSettings[IO, Long, String]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
       .withBootstrapServers("localhost:9092")
-      .withGroupId("booking")
+      .withGroupId("bookings")
 
   def consumer: Stream[IO, Unit] = {
     KafkaConsumer
@@ -24,7 +32,7 @@ class KafkaConsumerService {
       }
   }
 
-  def startConsuming(): IO[Unit] =
+  def startConsuming(): IO[FiberIO[Unit]] =
     consumer
       .handleErrorWith { error =>
         Stream.eval(IO.println(s"Consumer error: ${error.getMessage}")) >>
@@ -32,6 +40,5 @@ class KafkaConsumerService {
       }
       .compile
       .drain
-      .start.void
-      .as(ExitCode.Success)
+      .start
 }

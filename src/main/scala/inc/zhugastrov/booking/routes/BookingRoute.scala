@@ -15,7 +15,7 @@ import org.http4s.circe.jsonEncoder
 import org.http4s.dsl.Http4sDsl
 
 
-object BookingRouts {
+object BookingRoute {
 
   def bookingRoutes(service: BookingService): HttpRoutes[IO] = {
 

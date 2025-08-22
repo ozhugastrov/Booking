@@ -5,21 +5,28 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
-import inc.zhugastrov.booking.domain.Booking
+import doobie.util.transactor.Transactor.Aux
+import inc.zhugastrov.booking.domain.{Booking, DoubleBookingResponse}
 import inc.zhugastrov.booking.utils.Utils.{BookingException, DoubleBookingException}
 
 import java.time.LocalDate
 
 
-class BookingDAO private {
+class BookingDAO private(val xa: Aux[IO, Unit]) {
 
-  private val xa = Transactor.fromDriverManager[IO](
-    driver = "org.postgresql.Driver",
-    url = "jdbc:postgresql:testdb",
-    user = "postgres",
-    password = "zhutest",
-    logHandler = None
-  )
+  private val createBookingConflictsSql =
+    sql"""
+            CREATE TABLE IF NOT EXISTS booking_conflicts (
+            booking_id BIGINT NOT NULL,
+            property_id INT NOT NULL,
+            actual_booking_from DATE NOT NULL,
+            actual_booking_to DATE NOT NULL,
+            suggested_booking_from DATE NOT NULL,
+            suggested_booking_to DATE NOT NULL)
+          """
+
+  private val createBookingConflictsProgram: ConnectionIO[Int] = createBookingConflictsSql.update.run
+
 
   private val createTableSql =
     sql"""
@@ -50,6 +57,13 @@ class BookingDAO private {
     sql"select nextval('batch_id_seq')".query[Long].unique.transact(xa)
   }
 
+  def storeBookingConflict(bookingConflict: DoubleBookingResponse): IO[Int] = {
+    sql"""insert into booking_conflicts (booking_id, property_id, actual_booking_from, actual_booking_to, suggested_booking_from, suggested_booking_to)
+         values (${bookingConflict.bookingId}, ${bookingConflict.propertyId}, ${bookingConflict.actualFrom},
+          ${bookingConflict.actualTo}, ${bookingConflict.suggestedFrom}, ${bookingConflict.suggestedTo})"""
+      .update.run.transact(xa)
+  }
+
 
   def storeBooking(booking: List[BookingRow]): IO[Either[BookingException, Int]] = {
     val sql = "insert into bookings (booking_id, property_id, booking_date) values (?, ?, ?)"
@@ -62,9 +76,10 @@ class BookingDAO private {
 }
 
 object BookingDAO {
-  def create: IO[BookingDAO] = for {
-    bookingService <- IO.pure(BookingDAO())
+  def create(xa: Aux[IO, Unit]): IO[BookingDAO] = for {
+    bookingService <- IO.pure(BookingDAO(xa))
     _ <- bookingService.createTableProgram.transact(bookingService.xa).void
-    _ <- bookingService.createSequenceProgram.transact(bookingService.xa).void 
+    _ <- bookingService.createBookingConflictsProgram.transact(bookingService.xa).void
+    _ <- bookingService.createSequenceProgram.transact(bookingService.xa).void
   } yield bookingService
 }

@@ -16,13 +16,13 @@ object Utils {
   }
 
   def getSuggestedDates(startDate: LocalDate, endDate: LocalDate, reservedDates: List[LocalDate]): (LocalDate, LocalDate) = {
-    val days = ChronoUnit.DAYS.between(startDate, endDate).toInt
-    val resDatesSorted = reservedDates.sorted
+    val days = daysBetween(startDate, endDate) + 1
+    val resDatesSorted = reservedDates.filter(_.isAfter(startDate)).sorted
     resDatesSorted.sliding(2).find {
-        case from :: to :: Nil => daysBetween(startDate, endDate) >= days
+        case from :: to :: Nil => daysBetween(from, to) >= days
         case _ => false
       }
-      .map(l => (l.head, l.head.plusDays(days))).getOrElse((resDatesSorted.last, resDatesSorted.last.plusDays(days)))
+      .map(l => (l.head.plusDays(1), l.head.plusDays(days))).getOrElse((resDatesSorted.last.plusDays(1), resDatesSorted.last.plusDays(days)))
   }
 
 }

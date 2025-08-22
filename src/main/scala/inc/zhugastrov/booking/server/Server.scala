@@ -2,16 +2,12 @@ package inc.zhugastrov.booking.server
 
 import cats.effect.std.Console
 import cats.effect.{Async, Resource}
-import cats.syntax.all.*
 import com.comcast.ip4s.*
 import fs2.text
 import org.http4s.*
-import org.http4s.circe.CirceEntityDecoder.*
-import org.http4s.dsl.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Server
 import org.http4s.server.middleware.Logger
-import org.typelevel.ci.CIString
 
 
 object Server {
