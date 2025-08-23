@@ -2,11 +2,10 @@ package inc.zhugastrov.booking.routes
 
 import cats.effect.IO
 import inc.zhugastrov.booking.domain.BookingRequest
-import inc.zhugastrov.booking.service.BookingService
+import inc.zhugastrov.booking.service.api.BookingService
 import inc.zhugastrov.booking.utils.Encoders.bookingRequestDecoder
 import inc.zhugastrov.booking.utils.validation.Validators.bookingRequestValidator
 import inc.zhugastrov.booking.utils.validation.api.{Success, ValidationsError}
-import io.circe.Json
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.http4s.*
@@ -30,7 +29,7 @@ object BookingRoute {
           bookingRequestValidator.validate(br) match {
             case ValidationsError(errors) => BadRequest(errors)
             case Success => service.makeBooking(br).foldF(
-              conflict => Conflict(conflict.asJson), id => Ok(Json.obj(("bookingId", id.asJson)))
+              conflict => Conflict(conflict.asJson), id => Ok(id.asJson)
             )
           }
         }

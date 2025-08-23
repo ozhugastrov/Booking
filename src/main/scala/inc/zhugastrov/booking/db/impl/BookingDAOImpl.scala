@@ -1,18 +1,21 @@
-package inc.zhugastrov.booking.db
+package inc.zhugastrov.booking.db.impl
 
+import cats.data.EitherT
 import cats.effect.*
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.Aux
+import inc.zhugastrov.booking.db.BookingRow
+import inc.zhugastrov.booking.db.api.BookingDAO
 import inc.zhugastrov.booking.domain.{Booking, DoubleBookingResponse}
 import inc.zhugastrov.booking.utils.Utils.{BookingException, DoubleBookingException}
 
 import java.time.LocalDate
 
 
-class BookingDAO private(val xa: Aux[IO, Unit]) {
+private class BookingDAOImpl private(val xa: Aux[IO, Unit]) extends BookingDAO {
 
   private val createBookingConflictsSql =
     sql"""
@@ -65,21 +68,21 @@ class BookingDAO private(val xa: Aux[IO, Unit]) {
   }
 
 
-  def storeBooking(booking: List[BookingRow]): IO[Either[BookingException, Int]] = {
+  def storeBooking(booking: List[BookingRow]): EitherT[IO, BookingException, Int] = {
     val sql = "insert into bookings (booking_id, property_id, booking_date) values (?, ?, ?)"
-    Update[BookingRow](sql).updateMany(booking).attemptSomeSqlState {
+    EitherT(Update[BookingRow](sql).updateMany(booking).attemptSomeSqlState {
         case sqlstate.class23.UNIQUE_VIOLATION => DoubleBookingException
       }
-      .transact(xa)
+      .transact(xa))
   }
 
 }
 
-object BookingDAO {
+object BookingDAOImpl {
   def create(xa: Aux[IO, Unit]): IO[BookingDAO] = for {
-    bookingService <- IO.pure(BookingDAO(xa))
-    _ <- bookingService.createTableProgram.transact(bookingService.xa).void
-    _ <- bookingService.createBookingConflictsProgram.transact(bookingService.xa).void
-    _ <- bookingService.createSequenceProgram.transact(bookingService.xa).void
-  } yield bookingService
+    bookingDAO <- IO.pure(BookingDAOImpl(xa))
+    _ <- bookingDAO.createTableProgram.transact(bookingDAO.xa).void
+    _ <- bookingDAO.createBookingConflictsProgram.transact(bookingDAO.xa).void
+    _ <- bookingDAO.createSequenceProgram.transact(bookingDAO.xa).void
+  } yield bookingDAO
 }

@@ -6,7 +6,7 @@ import io.circe.parser.decode
 import fs2.*
 import fs2.kafka.*
 import inc.zhugastrov.booking.config.AppConfig
-import inc.zhugastrov.booking.db.BookingDAO
+import inc.zhugastrov.booking.db.api.BookingDAO
 import inc.zhugastrov.booking.domain.DoubleBookingResponse
 
 class KafkaConsumerService(db: BookingDAO, config: AppConfig) {

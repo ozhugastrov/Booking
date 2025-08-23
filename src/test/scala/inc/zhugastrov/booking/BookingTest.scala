@@ -4,10 +4,11 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import doobie.Transactor
 import doobie.util.transactor.Transactor.Aux
-import inc.zhugastrov.booking.db.{BookingDAO, BookingRow}
+import inc.zhugastrov.booking.db.BookingRow
+import inc.zhugastrov.booking.db.impl.BookingDAOImpl
 import inc.zhugastrov.booking.domain.BookingRequest
 import inc.zhugastrov.booking.kafka.KafkaProducerService
-import inc.zhugastrov.booking.service.BookingService
+import inc.zhugastrov.booking.service.impl.BookingServiceImpl
 import inc.zhugastrov.booking.utils.Utils
 import io.github.embeddedkafka.Codecs.stringDeserializer
 import io.github.embeddedkafka.EmbeddedKafka
@@ -39,12 +40,12 @@ class BookingTest extends AnyFlatSpec with BeforeAndAfterAll with should.Matcher
 
 
     val storeRead = for {
-      db <- BookingDAO.create(xa)
+      db <- BookingDAOImpl.create(xa)
       store <- db.storeBooking(List(
         BookingRow(123L, 123, LocalDate.parse("2025-08-10")),
         BookingRow(123L, 123, LocalDate.parse("2025-08-11")),
         BookingRow(123L, 123, LocalDate.parse("2025-08-12")))
-      )
+      ).value
       read <- db.getAllReservationsForPropertyId(123)
     } yield read
 
@@ -66,8 +67,8 @@ class BookingTest extends AnyFlatSpec with BeforeAndAfterAll with should.Matcher
 
       val service = for {
         producer <- IO.apply(KafkaProducerService("localhost:6001"))
-        db <- BookingDAO.create(xa)
-        bookService <- IO.apply(BookingService(db, producer))
+        db <- BookingDAOImpl.create(xa)
+        bookService <- BookingServiceImpl.create(db, producer)
       } yield bookService
 
       service.flatMap(_.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value).unsafeRunSync()

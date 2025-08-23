@@ -5,8 +5,9 @@ import java.time.temporal.ChronoUnit
 
 object Utils {
   sealed trait BookingException
-
   object DoubleBookingException extends BookingException
+  
+  final case class ReservationId(reservationId: Long)
 
   private def daysBetween(from: LocalDate, to: LocalDate) = ChronoUnit.DAYS.between(from, to).toInt
 
