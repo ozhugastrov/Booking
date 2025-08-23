@@ -19,7 +19,7 @@ class KafkaConsumerService(db: BookingDAO) {
   private def consumerSettings: ConsumerSettings[IO, Long, String] =
     ConsumerSettings[IO, Long, String]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
-      .withBootstrapServers("localhost:9092")
+      .withBootstrapServers("kafka:9092")
       .withGroupId("bookings")
 
   def consumer: Stream[IO, Unit] = {
