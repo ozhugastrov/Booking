@@ -50,7 +50,7 @@ private class BookingDAOImpl private(val xa: Aux[IO, Unit]) extends BookingDAO {
   private val createSequenceProgram = createSequenceSql.update.run
 
   def getAllReservationsForPropertyId(propertyId: Int): IO[List[Booking]] = {
-    sql"select property_id, booking_date from bookings"
+    sql"select property_id, booking_date from bookings where property_id = $propertyId"
       .query[Booking]
       .to[List]
       .transact(xa)
