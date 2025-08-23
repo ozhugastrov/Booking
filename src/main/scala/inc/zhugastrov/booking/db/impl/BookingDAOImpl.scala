@@ -2,6 +2,8 @@ package inc.zhugastrov.booking.db.impl
 
 import cats.data.EitherT
 import cats.effect.*
+import cats.effect.implicits.*
+import cats.effect.IO.catsSyntaxTuple3Parallel
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*

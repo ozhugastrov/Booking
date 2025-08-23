@@ -2,6 +2,7 @@ package inc.zhugastrov.booking
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import cats.syntax.all._
 import doobie.Transactor
 import doobie.util.transactor.Transactor.Aux
 import inc.zhugastrov.booking.db.BookingRow
@@ -65,15 +66,15 @@ class BookingTest extends AnyFlatSpec with BeforeAndAfterAll with should.Matcher
         logHandler = None
       )
 
-      val service = for {
+      val result = for {
         producer <- IO.apply(KafkaProducerService("localhost:6001"))
         db <- BookingDAOImpl.create(xa)
         bookService <- BookingServiceImpl.create(db, producer)
-      } yield bookService
+        res <- bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value &>
+          bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value
+      } yield res
 
-      service.flatMap(_.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value).unsafeRunSync()
-      service.flatMap(_.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value).unsafeRunSync()
-
+      result.unsafeRunSync()
       consumeFirstMessageFrom("booking") should not be empty
     }
   }
