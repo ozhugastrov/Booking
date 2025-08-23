@@ -18,12 +18,12 @@ class BookingService(db: BookingDAO, kafkaProducer: KafkaProducerService) {
       .map(l => PropertyReserveDatesResponse(propertyId, l.map(_.bookingDate).sorted))
   }
 
-  def makeBooking(request: BookingRequest): EitherT[IO, DoubleBookingResponse, Int] = {
+  def makeBooking(request: BookingRequest): EitherT[IO, DoubleBookingResponse, Long] = {
     val datesSplit = getDatesBetween(request.from, request.to)
     for {
       batchId <- EitherT.right(db.getBatchId)
       result <- EitherT(db.storeBooking(datesSplit.map(day =>
-        BookingRow(batchId, request.propertyId, day))))
+        BookingRow(batchId, request.propertyId, day)))).map(_ => batchId)
         .leftSemiflatMap(be => {
           db.getAllReservationsForPropertyId(request.propertyId)
             .map(resDates =>
