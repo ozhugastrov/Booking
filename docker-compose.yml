@@ -32,10 +32,10 @@ services:
       - ./:/app
     command: sbt run
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/testdb
-      - DB_USER=postgres
-      - DB_PASSWORD=zhutest
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/testdb
+      - POSTGRES_NAME=postgres
+      - POSTGRES_PASSWORD=zhutest
+      - KAFKA_URL=kafka:9092
     depends_on:
       - postgres
       - kafka

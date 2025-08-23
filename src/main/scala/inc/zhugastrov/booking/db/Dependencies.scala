@@ -3,13 +3,14 @@ package inc.zhugastrov.booking.db
 import cats.effect.IO
 import doobie.Transactor
 import doobie.util.transactor.Transactor.Aux
+import inc.zhugastrov.booking.config.AppConfig
 
 object Dependencies {
-   val xa: Aux[IO, Unit] = Transactor.fromDriverManager[IO](
+  def xa(config: AppConfig): Aux[IO, Unit] = Transactor.fromDriverManager[IO](
     driver = "org.postgresql.Driver",
-    url = "jdbc:postgresql://postgres:5432/testdb",
-    user = "postgres",
-    password = "zhutest",
+    url = config.postgresUrl,
+    user = config.postgresName,
+    password = config.postgresPass.value,
     logHandler = None
   )
 }

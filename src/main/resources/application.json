@@ -1,0 +1,6 @@
+{
+  "kafkaUrl": "localhost:9092",
+  "postgresUrl": "jdbc:postgresql:testdb",
+  "postgresName": "postgres",
+  "postgresPass": "zhutest"
+}

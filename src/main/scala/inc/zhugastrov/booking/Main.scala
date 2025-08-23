@@ -1,6 +1,7 @@
 package inc.zhugastrov.booking
 
 import cats.effect.*
+import inc.zhugastrov.booking.config.appConfig
 import inc.zhugastrov.booking.db.{BookingDAO, Dependencies}
 import inc.zhugastrov.booking.kafka.{KafkaConsumerService, KafkaProducerService}
 import inc.zhugastrov.booking.routes.BookingRoute.bookingRoutes
@@ -12,10 +13,11 @@ object Main extends IOApp {
 
   private def program: IO[Resource[IO, Server]] = {
     for {
-      db <- BookingDAO.create(Dependencies.xa)
-      consumer <- IO.apply(KafkaConsumerService(db))
+      config <- appConfig.load[IO]
+      db <- BookingDAO.create(Dependencies.xa(config))
+      consumer <- IO.apply(KafkaConsumerService(db, config))
       consumer <- consumer.startConsuming()
-      producer <- IO.apply(KafkaProducerService("kafka:9092"))
+      producer <- IO.apply(KafkaProducerService(config.kafkaUrl))
       service <- IO.apply(BookingService(db, producer))
       server <- IO.apply(Server.createServer[IO](bookingRoutes(service)))
     } yield server

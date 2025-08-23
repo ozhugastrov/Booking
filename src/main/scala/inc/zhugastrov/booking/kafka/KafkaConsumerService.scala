@@ -5,10 +5,11 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import fs2.*
 import fs2.kafka.*
+import inc.zhugastrov.booking.config.AppConfig
 import inc.zhugastrov.booking.db.BookingDAO
 import inc.zhugastrov.booking.domain.DoubleBookingResponse
 
-class KafkaConsumerService(db: BookingDAO) {
+class KafkaConsumerService(db: BookingDAO, config: AppConfig) {
 
   private def processRecord(record: ConsumerRecord[Long, String]) = {
     decode[DoubleBookingResponse](record.value).fold(
@@ -19,7 +20,7 @@ class KafkaConsumerService(db: BookingDAO) {
   private def consumerSettings: ConsumerSettings[IO, Long, String] =
     ConsumerSettings[IO, Long, String]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
-      .withBootstrapServers("kafka:9092")
+      .withBootstrapServers(config.kafkaUrl)
       .withGroupId("bookings")
 
   def consumer: Stream[IO, Unit] = {
