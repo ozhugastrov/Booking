@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 object Encoders {
 
-  implicit val bookingRequestDecoder: Decoder[BookingRequest] = Decoder.instance { h =>
+  given bookingRequestDecoder: Decoder[BookingRequest] = Decoder.instance { h =>
       for {
         propertyId <- h.get[Int]("propertyId")
         startDate <- h.get[LocalDate]("startDate")
