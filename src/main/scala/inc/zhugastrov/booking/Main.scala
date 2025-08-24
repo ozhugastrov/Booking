@@ -16,8 +16,7 @@ object Main extends IOApp {
     for {
       config <- appConfig.load[IO]
       db <- BookingDAOImpl.create(Dependencies.xa(config))
-      consumer <- IO.apply(KafkaConsumerService(db, config))
-      consumer <- consumer.startConsuming()
+      consumer <- KafkaConsumerService(db, config).startConsuming()
       producer <- IO.apply(KafkaProducerService(config.kafkaUrl))
       service <- BookingServiceImpl.create(db, producer)
       server <- IO.apply(Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service))))

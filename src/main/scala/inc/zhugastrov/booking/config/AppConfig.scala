@@ -24,7 +24,7 @@ object AppConfig {
 }
 
 val appConfig = {
-  lazy val confFile = file(Paths.get("config.json")).as[AppConfig]
+  lazy val confFile = file(Paths.get("src/main/resources/application.json")).as[AppConfig]
   (
     env("KAFKA_URL").as[String] or confFile.map(_.kafkaUrl),
     env("POSTGRES_URL").as[String] or confFile.map(_.postgresUrl),
