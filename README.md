@@ -6,7 +6,7 @@ This is a simple booking service that prevents double bookings. When a conflict 
 
 ### To run it locally:
 1. Create Kafka topic `booking`
-2. Update Postgres and Kaka connections in [application.conf](https://github.com/ozhugastrov/Booking/blob/1973c13f8161bbc049f0ab416e23799271acf4e7/src/main/resources/application.json)
+2. Update Postgres and Kaka connections in [application.json](https://github.com/ozhugastrov/Booking/blob/1973c13f8161bbc049f0ab416e23799271acf4e7/src/main/resources/application.json)
 3. Use `sbt run` command to start service 
 
 ### To run inside a container:
