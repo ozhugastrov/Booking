@@ -16,7 +16,7 @@ This is a simple booking service that prevents double bookings. When a conflict 
 ### Query examples
 
 ```
-curl -X POST "http://localhost:8080/bookings/book" \
+curl -X POST "http://localhost:8080/api/v1/bookings/book" \
   -H "Content-Type: application/json" \
   -d '{
     "propertyId": 123,
@@ -26,5 +26,5 @@ curl -X POST "http://localhost:8080/bookings/book" \
 ```
 
 ```
-curl -X GET "http://localhost:8080/bookings/123"
+curl -X GET "http://localhost:8080/api/v1/bookings/123"
 ```

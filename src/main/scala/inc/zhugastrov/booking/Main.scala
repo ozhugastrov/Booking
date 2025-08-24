@@ -7,9 +7,8 @@ import inc.zhugastrov.booking.db.impl.BookingDAOImpl
 import inc.zhugastrov.booking.kafka.{KafkaConsumerService, KafkaProducerService}
 import inc.zhugastrov.booking.routes.BookingRoute.bookingRoutes
 import inc.zhugastrov.booking.server.Server
-import inc.zhugastrov.booking.service.api.BookingService
 import inc.zhugastrov.booking.service.impl.BookingServiceImpl
-import org.http4s.server.Server
+import org.http4s.server.{Router, Server}
 
 object Main extends IOApp {
 
@@ -21,7 +20,7 @@ object Main extends IOApp {
       consumer <- consumer.startConsuming()
       producer <- IO.apply(KafkaProducerService(config.kafkaUrl))
       service <- BookingServiceImpl.create(db, producer)
-      server <- IO.apply(Server.createServer[IO](bookingRoutes(service)))
+      server <- IO.apply(Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service))))
     } yield server
   }
 
