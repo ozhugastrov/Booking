@@ -1,8 +1,9 @@
 package inc.zhugastrov.booking
 
-import cats.effect.IO
+import cats.data.EitherT
+import cats.effect.{IO, Resource}
 import cats.effect.unsafe.implicits.global
-import cats.syntax.all._
+import cats.syntax.all.*
 import doobie.Transactor
 import doobie.util.transactor.Transactor.Aux
 import inc.zhugastrov.booking.db.BookingRow
@@ -42,15 +43,15 @@ class BookingTest extends AnyFlatSpec with BeforeAndAfterAll with should.Matcher
 
     val storeRead = for {
       db <- BookingDAOImpl.create(xa)
-      store <- db.storeBooking(List(
+      store <- Resource.eval(db.storeBooking(List(
         BookingRow(123L, 123, LocalDate.parse("2025-08-10")),
         BookingRow(123L, 123, LocalDate.parse("2025-08-11")),
         BookingRow(123L, 123, LocalDate.parse("2025-08-12")))
-      ).value
-      read <- db.getAllReservationsForPropertyId(123)
+      ).value)
+      read <- Resource.eval(db.getAllReservationsForPropertyId(123))
     } yield read
 
-    storeRead.unsafeRunSync().length should be(3)
+    storeRead.use(IO.pure).unsafeRunSync().length should be(3)
   }
 
   "booking service" should "send errors to kafka" in {
@@ -67,14 +68,14 @@ class BookingTest extends AnyFlatSpec with BeforeAndAfterAll with should.Matcher
       )
 
       val result = for {
-        producer <- IO.apply(KafkaProducerService("localhost:6001"))
+        producer <- Resource.pure(KafkaProducerService("localhost:6001"))
         db <- BookingDAOImpl.create(xa)
         bookService <- BookingServiceImpl.create(db, producer)
-        res <- bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value &>
-          bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value
+        res <- Resource.eval(bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value &>
+          bookService.makeBooking(BookingRequest(123, LocalDate.parse("2025-08-05"), LocalDate.parse("2025-08-10"))).value)
       } yield res
 
-      result.unsafeRunSync()
+      result.use(IO.pure).unsafeRunSync()
       consumeFirstMessageFrom("booking") should not be empty
     }
   }
