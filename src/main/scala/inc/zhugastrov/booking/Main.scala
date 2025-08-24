@@ -16,10 +16,13 @@ object Main extends IOApp {
     for {
       config <- appConfig.load[IO]
       db <- BookingDAOImpl.create(Dependencies.xa(config))
-      consumer <- KafkaConsumerService(db, config).startConsuming()
       producer <- IO.apply(KafkaProducerService(config.kafkaUrl))
       service <- BookingServiceImpl.create(db, producer)
-      server <- IO.apply(Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service))))
+      server <-
+        IO.apply(
+          (KafkaConsumerService(db, config).consume.background,
+            Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service)))
+          ).parMapN((_, server) => server))
     } yield server
   }
 

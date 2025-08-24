@@ -13,7 +13,7 @@ class KafkaConsumerService(db: BookingDAO, config: AppConfig) {
 
   private def processRecord(record: ConsumerRecord[Long, String]) = {
     decode[DoubleBookingResponse](record.value).fold(
-      err =>  IO.println("Unknown event received " + record.value),
+      err => IO.println("Unknown event received " + record.value),
       event => db.storeBookingConflict(event) *> IO.println("Stored to db"))
   }
 
@@ -23,23 +23,14 @@ class KafkaConsumerService(db: BookingDAO, config: AppConfig) {
       .withBootstrapServers(config.kafkaUrl)
       .withGroupId("bookings")
 
-  def consumer: Stream[IO, Unit] = {
+  def consume: IO[Unit] = {
     KafkaConsumer
       .stream(consumerSettings)
       .subscribeTo("booking")
       .records
       .mapAsync(5) { committable =>
         processRecord(committable.record) *> committable.offset.commit
-      }
+      }.compile.drain
   }
 
-  def startConsuming(): IO[FiberIO[Unit]] =
-    consumer
-      .handleErrorWith { error =>
-        Stream.eval(IO.println(s"Consumer error: ${error.getMessage}")) >>
-          Stream.raiseError[IO](error)
-      }
-      .compile
-      .drain
-      .start
 }
