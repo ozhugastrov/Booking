@@ -81,10 +81,10 @@ private class BookingDAOImpl private(val xa: Aux[IO, Unit]) extends BookingDAO {
 }
 
 object BookingDAOImpl {
-  def create(xa: Aux[IO, Unit]): IO[BookingDAO] = for {
-    bookingDAO <- IO.pure(BookingDAOImpl(xa))
-    _ <- bookingDAO.createTableProgram.transact(bookingDAO.xa).void
-    _ <- bookingDAO.createBookingConflictsProgram.transact(bookingDAO.xa).void
-    _ <- bookingDAO.createSequenceProgram.transact(bookingDAO.xa).void
+  def create(xa: Aux[IO, Unit]): Resource[IO, BookingDAO] = for {
+    bookingDAO <- Resource.pure(BookingDAOImpl(xa))
+    _ <- bookingDAO.createTableProgram.transact(bookingDAO.xa).void.toResource
+    _ <- bookingDAO.createBookingConflictsProgram.transact(bookingDAO.xa).void.toResource
+    _ <- bookingDAO.createSequenceProgram.transact(bookingDAO.xa).void.toResource
   } yield bookingDAO
 }

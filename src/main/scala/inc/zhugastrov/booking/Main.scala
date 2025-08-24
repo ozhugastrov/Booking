@@ -12,19 +12,16 @@ import org.http4s.server.{Router, Server}
 
 object Main extends IOApp {
 
-  private def program: IO[Resource[IO, Server]] = {
+  private def program: Resource[IO, Server] = {
     for {
-      config <- appConfig.load[IO]
+      config <- appConfig.load[IO].toResource
       db <- BookingDAOImpl.create(Dependencies.xa(config))
-      producer <- IO.apply(KafkaProducerService(config.kafkaUrl))
+      producer <- Resource.pure(KafkaProducerService(config.kafkaUrl))
+      consumer <- KafkaConsumerService(db, config).consume.background
       service <- BookingServiceImpl.create(db, producer)
-      server <-
-        IO.apply(
-          (KafkaConsumerService(db, config).consume.background,
-            Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service)))
-          ).parMapN((_, server) => server))
+      server <- Server.createServer[IO](Router("/api/v1" -> bookingRoutes(service)))
     } yield server
   }
 
-  def run(args: List[String]): IO[ExitCode] = program.flatMap(_.use(_ => IO.never)).as(ExitCode.Success)
+  def run(args: List[String]): IO[ExitCode] = program.use(_ => IO.never).as(ExitCode.Success)
 }

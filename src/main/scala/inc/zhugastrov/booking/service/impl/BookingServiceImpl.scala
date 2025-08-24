@@ -1,7 +1,7 @@
 package inc.zhugastrov.booking.service.impl
 
 import cats.data.EitherT
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 import inc.zhugastrov.booking.db.BookingRow
 import inc.zhugastrov.booking.db.api.BookingDAO
 import inc.zhugastrov.booking.domain.{BookingRequest, DoubleBookingResponse, PropertyReserveDatesResponse}
@@ -41,7 +41,7 @@ private class BookingServiceImpl private(db: BookingDAO, kafkaProducer: KafkaPro
 }
 
 object BookingServiceImpl {
-  def create(db: BookingDAO, kafkaProducer: KafkaProducerService): IO[BookingService] = for {
-    bookingService <- IO.apply(BookingServiceImpl(db, kafkaProducer))
+  def create(db: BookingDAO, kafkaProducer: KafkaProducerService): Resource[IO, BookingService] = for {
+    bookingService <- Resource.pure(BookingServiceImpl(db, kafkaProducer))
   } yield bookingService
 }
