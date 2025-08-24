@@ -1,9 +1,7 @@
 package inc.zhugastrov.booking
 
-import cats.data.EitherT
-import cats.effect.{IO, Resource}
 import cats.effect.unsafe.implicits.global
-import cats.syntax.all.*
+import cats.effect.{IO, Resource}
 import doobie.Transactor
 import doobie.util.transactor.Transactor.Aux
 import inc.zhugastrov.booking.db.BookingRow
